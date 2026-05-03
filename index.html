@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Linguistic Prison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08080f;--bg2:#0c0c16;--bg3:#12121f;
+  --green:#39FF14;--amber:#FFB300;--red:#ff3333;
+  --steel:#1a1a2e;--steel-light:#2a2a3e;
+  --text:#c8c8d0;--text-dim:#666680;--text-bright:#e8e8f0;
+  --font:'JetBrains Mono','Fira Code','Cascadia Code',monospace;
+  --bar-h:3px;
+}
+html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--steel-light) var(--bg)}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.7;overflow-x:hidden}
+::selection{background:var(--green);color:var(--bg)}
+a{color:var(--green);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Progress bar */
+#progress-bar{position:fixed;top:0;left:0;width:100%;height:var(--bar-h);z-index:1000;background:var(--bg2)}
+#progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--amber));transition:width .6s ease}
+#cell-counter{position:fixed;top:12px;right:20px;z-index:1000;font-size:12px;color:var(--text-dim);letter-spacing:2px}
+#cell-counter span{color:var(--green);font-weight:700}
+
+/* Container */
+.container{max-width:800px;margin:0 auto;padding:0 24px}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px 24px;position:relative}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(90deg,transparent,transparent 78px,var(--steel) 78px,var(--steel) 80px);opacity:.08;pointer-events:none}
+.hero-title{font-size:clamp(2rem,7vw,4.5rem);font-weight:800;letter-spacing:.15em;color:var(--text-bright);position:relative;animation:flicker 4s infinite;text-transform:uppercase}
+@keyframes flicker{0%,93%,95%,97%,100%{opacity:1;text-shadow:0 0 10px var(--green),0 0 40px rgba(57,255,20,.15)}94%,96%{opacity:.7;text-shadow:none}98%{opacity:.85;text-shadow:0 0 5px var(--green)}}
+.hero-sub{font-size:clamp(.85rem,2.5vw,1.15rem);color:var(--text-dim);margin-top:12px;letter-spacing:.25em;text-transform:uppercase}
+.hero-intro{max-width:600px;margin:40px auto 0;font-size:.95rem;color:var(--text-dim);line-height:1.9}
+.hero-intro em{color:var(--amber);font-style:normal}
+.hero-counter{margin-top:48px;font-size:1.1rem;color:var(--steel-light);letter-spacing:.2em}
+.hero-counter .count{color:var(--green);font-weight:700;font-size:1.4rem}
+.scroll-hint{margin-top:40px;animation:bob 2s ease-in-out infinite;color:var(--text-dim);font-size:1.5rem}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* Cells */
+.cell{padding:80px 0;border-top:1px solid var(--steel);opacity:0;transform:translateY(40px);transition:opacity .8s ease,transform .8s ease}
+.cell.visible{opacity:1;transform:translateY(0)}
+.cell-header{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+.cell-number{font-size:.75rem;color:var(--text-dim);letter-spacing:.3em;text-transform:uppercase}
+.cell-lock{font-size:1.3rem;transition:all .4s ease}
+.cell-lock.locked{color:var(--red);filter:grayscale(.3)}
+.cell-lock.unlocked{color:var(--green);animation:unlockPulse .6s ease}
+@keyframes unlockPulse{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+.cell-title{font-size:clamp(1.3rem,4vw,2rem);font-weight:700;color:var(--text-bright);letter-spacing:.08em;margin-bottom:4px}
+.cell-lang{font-size:.85rem;color:var(--amber);margin-bottom:4px;letter-spacing:.1em}
+.cell-missing{font-size:.8rem;color:var(--red);opacity:.7;margin-bottom:24px;padding:10px 14px;border-left:2px solid var(--red);background:rgba(255,51,51,.03)}
+.cell-constraint{font-size:.85rem;color:var(--text-dim);margin-bottom:32px;padding:12px 16px;border:1px solid var(--steel);background:var(--bg2);border-radius:4px}
+.cell-constraint strong{color:var(--amber)}
+
+/* Puzzle areas */
+.puzzle{background:var(--bg2);border:1px solid var(--steel);border-radius:6px;padding:24px;margin:24px 0}
+.puzzle-title{font-size:.8rem;letter-spacing:.25em;color:var(--green);text-transform:uppercase;margin-bottom:16px}
+.puzzle-instructions{font-size:.85rem;color:var(--text-dim);margin-bottom:20px}
+
+/* Statement quiz (Cell 1) */
+.stmt{padding:12px 16px;margin:6px 0;border:1px solid var(--steel);border-radius:4px;cursor:pointer;transition:all .25s ease;font-size:.88rem;display:flex;align-items:center;gap:12px;user-select:none}
+.stmt:hover{border-color:var(--text-dim);background:var(--bg3)}
+.stmt .indicator{width:20px;height:20px;border:2px solid var(--steel-light);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .25s ease;font-size:12px}
+.stmt.selected .indicator{border-color:var(--green);background:var(--green);color:var(--bg)}
+.stmt.correct-answer{border-color:var(--green);background:rgba(57,255,20,.05)}
+.stmt.wrong-answer{border-color:var(--red);background:rgba(255,51,51,.05)}
+
+/* Buttons */
+.btn{display:inline-block;padding:10px 28px;font-family:var(--font);font-size:.82rem;letter-spacing:.15em;text-transform:uppercase;border:1px solid var(--green);color:var(--green);background:transparent;border-radius:4px;cursor:pointer;transition:all .25s ease;margin-top:16px}
+.btn:hover{background:var(--green);color:var(--bg)}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-amber{border-color:var(--amber);color:var(--amber)}
+.btn-amber:hover{background:var(--amber);color:var(--bg)}
+
+/* Reveal sections */
+.reveal{max-height:0;overflow:hidden;transition:max-height .8s ease;opacity:0}
+.reveal.shown{max-height:4000px;opacity:1;transition:max-height .8s ease,opacity .5s ease .2s}
+.mind-fuck{margin-top:24px;padding:20px;background:var(--bg3);border-left:3px solid var(--amber);border-radius:0 6px 6px 0}
+.mind-fuck h4{color:var(--amber);font-size:.9rem;letter-spacing:.15em;margin-bottom:10px}
+.mind-fuck p{font-size:.85rem;color:var(--text);line-height:1.8}
+.key-facts{margin-top:20px}
+.key-facts h4{color:var(--green);font-size:.8rem;letter-spacing:.2em;margin-bottom:12px;text-transform:uppercase}
+.key-facts li{font-size:.82rem;color:var(--text-dim);margin:8px 0;padding-left:16px;position:relative;line-height:1.7}
+.key-facts li::before{content:'›';position:absolute;left:0;color:var(--green)}
+
+/* Cell 2: Room layout */
+.room-grid{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);width:min(100%,340px);aspect-ratio:1;border:2px solid var(--steel-light);margin:16px auto;position:relative;background:var(--bg)}
+.room-grid .compass-label{position:absolute;font-size:.65rem;color:var(--text-dim);letter-spacing:.15em}
+.room-grid .compass-n{top:-20px;left:50%;transform:translateX(-50%)}
+.room-grid .compass-s{bottom:-20px;left:50%;transform:translateX(-50%)}
+.room-grid .compass-e{right:-30px;top:50%;transform:translateY(-50%)}
+.room-grid .compass-w{left:-34px;top:50%;transform:translateY(-50%)}
+.room-obj{display:flex;align-items:center;justify-content:center;font-size:1.6rem;position:relative}
+.room-obj .obj-label{position:absolute;bottom:-2px;font-size:.5rem;color:var(--text-dim);letter-spacing:.05em}
+.facing-indicator{text-align:center;margin:16px 0;font-size:.9rem;color:var(--amber)}
+.direction-btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.dir-btn{flex:1;min-width:80px;padding:8px;font-family:var(--font);font-size:.75rem;background:var(--bg);border:1px solid var(--steel);color:var(--text);border-radius:4px;cursor:pointer;text-align:center;transition:all .2s}
+.dir-btn:hover{border-color:var(--green)}
+.dir-btn.selected{border-color:var(--green);background:rgba(57,255,20,.1);color:var(--green)}
+.dir-btn.correct{border-color:var(--green);background:rgba(57,255,20,.15)}
+.dir-btn.incorrect{border-color:var(--red);background:rgba(255,51,51,.1)}
+.compass-question{margin:12px 0;padding:12px;background:var(--bg);border:1px solid var(--steel);border-radius:4px;font-size:.85rem}
+.compass-question .q-obj{color:var(--amber);font-weight:700}
+
+/* Cell 3: Timeline */
+.timeline-area{position:relative;padding:20px 0}
+.timeline-drop{display:flex;justify-content:space-between;gap:8px;margin:16px 0;flex-wrap:wrap}
+.drop-zone{flex:1;min-width:100px;min-height:80px;border:1px dashed var(--steel-light);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;text-align:center;transition:all .2s}
+.drop-zone.active{border-color:var(--green);background:rgba(57,255,20,.03)}
+.drop-zone .zone-label{font-size:.65rem;color:var(--text-dim);letter-spacing:.1em;margin-bottom:6px}
+.event-chip{display:inline-block;padding:6px 14px;margin:4px;font-size:.78rem;background:var(--bg3);border:1px solid var(--steel);border-radius:20px;cursor:pointer;transition:all .2s;user-select:none}
+.event-chip:hover{border-color:var(--amber)}
+.event-chip.placed{opacity:.4;pointer-events:none}
+.event-chip.in-zone{background:rgba(57,255,20,.08);border-color:var(--green);pointer-events:auto;cursor:pointer}
+.event-chip.correct-place{border-color:var(--green);background:rgba(57,255,20,.12)}
+.event-chip.wrong-place{border-color:var(--red);background:rgba(255,51,51,.08)}
+
+/* Cell 4: Mountain */
+.mountain-svg{width:100%;max-width:500px;margin:16px auto;display:block}
+.mountain-drop-zone{cursor:pointer;transition:all .3s}
+.mountain-drop-zone:hover{opacity:.8}
+.mountain-drop-zone.filled{opacity:1}
+.mountain-label{font-size:.7rem;fill:var(--text-dim)}
+.event-tray{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;justify-content:center}
+
+/* Cell 5: Evidential quiz */
+.ev-sentence{padding:16px;margin:10px 0;border:1px solid var(--steel);border-radius:6px;background:var(--bg)}
+.ev-text{font-size:.9rem;color:var(--text-bright);margin-bottom:4px}
+.ev-context{font-size:.78rem;color:var(--text-dim);font-style:italic;margin-bottom:12px}
+.ev-options{display:flex;gap:10px}
+.ev-opt{flex:1;padding:10px;font-family:var(--font);font-size:.8rem;background:var(--bg2);border:1px solid var(--steel);color:var(--text);border-radius:4px;cursor:pointer;text-align:center;transition:all .2s}
+.ev-opt:hover{border-color:var(--text-dim)}
+.ev-opt.selected{border-color:var(--amber);color:var(--amber)}
+.ev-opt.correct{border-color:var(--green);color:var(--green);background:rgba(57,255,20,.05)}
+.ev-opt.wrong{border-color:var(--red);color:var(--red);background:rgba(255,51,51,.05)}
+
+/* Cell 6: Toki Pona */
+.tp-round{margin:14px 0;padding:16px;border:1px solid var(--steel);border-radius:6px;background:var(--bg)}
+.tp-prompt{font-size:.9rem;color:var(--text-bright);margin-bottom:12px}
+.tp-options{display:flex;flex-direction:column;gap:6px}
+.tp-opt{padding:10px 14px;font-family:var(--font);font-size:.82rem;background:var(--bg2);border:1px solid var(--steel);color:var(--text);border-radius:4px;cursor:pointer;transition:all .2s;text-align:left}
+.tp-opt:hover{border-color:var(--text-dim)}
+.tp-opt.selected{border-color:var(--amber);color:var(--amber)}
+.tp-opt.correct{border-color:var(--green);color:var(--green)}
+.tp-opt.wrong{border-color:var(--red);color:var(--red)}
+
+/* Cell 7: Word builder */
+.ithkuil-demo{padding:16px;background:var(--bg);border:1px solid var(--steel);border-radius:6px;margin:14px 0}
+.ithkuil-word{font-size:1.1rem;color:var(--amber);text-align:center;padding:10px;word-break:break-all;letter-spacing:.05em}
+.ithkuil-meaning{font-size:.82rem;color:var(--text-dim);text-align:center;margin-top:6px;line-height:1.7}
+.builder-step{margin:12px 0}
+.builder-step label{display:block;font-size:.75rem;color:var(--green);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px}
+.builder-options{display:flex;flex-wrap:wrap;gap:6px}
+.build-opt{padding:8px 14px;font-family:var(--font);font-size:.78rem;background:var(--bg);border:1px solid var(--steel);color:var(--text);border-radius:4px;cursor:pointer;transition:all .2s}
+.build-opt:hover{border-color:var(--text-dim)}
+.build-opt.active{border-color:var(--green);color:var(--green);background:rgba(57,255,20,.06)}
+.built-word{text-align:center;margin:20px 0;padding:20px;border:1px solid var(--steel);border-radius:6px;background:var(--bg)}
+.built-word .word{font-size:1.3rem;color:var(--amber);letter-spacing:.1em}
+.built-word .meaning{font-size:.85rem;color:var(--text-dim);margin-top:8px;line-height:1.7}
+
+/* Exit */
+.exit-section{padding:100px 0;text-align:center}
+.exit-section.hidden{display:none}
+.exit-line{font-size:clamp(.95rem,2.5vw,1.2rem);color:var(--text-dim);margin:20px auto;max-width:600px;line-height:1.9;opacity:0;transform:translateY(20px);transition:all .8s ease}
+.exit-line.visible{opacity:1;transform:translateY(0)}
+.exit-line.emphasis{color:var(--text-bright);font-weight:500}
+.exit-line.final{color:var(--green);font-size:clamp(1.1rem,3vw,1.5rem);font-weight:700;margin-top:40px}
+
+/* Score display */
+.score-display{text-align:center;padding:16px;margin-top:16px;font-size:.85rem;color:var(--text-dim)}
+.score-display .score-num{color:var(--green);font-weight:700;font-size:1.1rem}
+
+/* Footer */
+footer{padding:60px 24px;text-align:center;border-top:1px solid var(--steel);margin-top:40px}
+footer p{font-size:.75rem;color:var(--text-dim);margin:8px 0;line-height:1.8}
+footer .credit{color:var(--green)}
+footer .sources{max-width:600px;margin:24px auto 0;text-align:left}
+footer .sources h5{color:var(--text-dim);font-size:.7rem;letter-spacing:.2em;margin-bottom:8px;text-transform:uppercase}
+footer .sources li{font-size:.7rem;color:#444460;margin:4px 0;line-height:1.6}
+
+/* Responsive */
+@media(max-width:600px){
+  .container{padding:0 16px}
+  .cell{padding:50px 0}
+  .puzzle{padding:16px}
+  .ev-options,.direction-btns{flex-direction:column}
+  .timeline-drop{flex-direction:column}
+  .drop-zone{min-height:60px}
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"><div id="progress-fill"></div></div>
+<div id="cell-counter">ESCAPED: <span id="counter-num">0</span>/7</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-title">THE LINGUISTIC PRISON</div>
+  <div class="hero-sub">7 languages that break how you think</div>
+  <div class="hero-intro">
+    Every language is a cage for thought. Most cages are invisible — because you've <em>never left yours</em>.<br><br>
+    Enter these cells. Try to think. Feel your brain malfunction.
+  </div>
+  <div class="hero-counter">CELLS ESCAPED: <span class="count" id="hero-count">0</span> / 7</div>
+  <div class="scroll-hint">↓</div>
+</section>
+
+<div class="container">
+
+<!-- ═══════════ CELL 1: PIRAHÃ ═══════════ -->
+<section class="cell" id="cell-1" data-cell="1">
+  <div class="cell-header">
+    <span class="cell-number">Cell 01 of 07</span>
+    <span class="cell-lock locked" id="lock-1">🔒</span>
+  </div>
+  <div class="cell-title">THE IMMEDIACY CELL</div>
+  <div class="cell-lang">Pirahã — Brazilian Amazon — ~400 speakers</div>
+  <div class="cell-missing">⚠ MISSING: Numbers, recursion, past tense, color words, creation myths</div>
+  <div class="cell-constraint"><strong>THE CONSTRAINT:</strong> You can only reference what you or someone alive has directly witnessed. No abstractions. No embedding clauses inside clauses. No counting.</div>
+
+  <div class="puzzle" id="puzzle-1">
+    <div class="puzzle-title">▸ Escape this cell</div>
+    <div class="puzzle-instructions">Which statements could a Pirahã speaker express? Select ALL that apply, then submit.</div>
+    <div id="stmts-1"></div>
+    <button class="btn" id="submit-1" onclick="checkCell1()">Submit</button>
+    <div class="score-display" id="score-1" style="display:none"></div>
+  </div>
+
+  <div class="reveal" id="reveal-1">
+    <div class="mind-fuck">
+      <h4>⚡ THE MIND-FUCK</h4>
+      <p>Daniel Everett tried to teach them counting for <strong>8 months</strong>. They learned zero numbers. Not because they're incapable — because their culture has an <em>"Immediacy of Experience Principle"</em> that rejects abstract knowledge not tied to direct perception.</p>
+      <p style="margin-top:10px">A teenager who moved away and learned Portuguese came back — and <strong>refused to use numbers anymore</strong>. The culture is that powerful.</p>
+    </div>
+    <div class="key-facts">
+      <h4>Key Facts</h4>
+      <ul>
+        <li>No number words at all — not even "one." They have "small amount" (hói) and "larger amount" (hoí)</li>
+        <li>No recursion — the thing Chomsky said defines ALL human language. Pirahã broke his theory.</li>
+        <li>No color terms. They describe things by comparison: "like blood," "like the sky"</li>
+        <li>No creation myth. No fiction. No stories about things nobody witnessed.</li>
+        <li>They whistle and hum their language — one of few tonal-whistled languages on Earth</li>
+        <li>Everett was a Christian missionary who went to convert them. <strong>They deconverted HIM.</strong> He became an atheist.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CELL 2: GUUGU YIMITHIRR ═══════════ -->
+<section class="cell" id="cell-2" data-cell="2">
+  <div class="cell-header">
+    <span class="cell-number">Cell 02 of 07</span>
+    <span class="cell-lock locked" id="lock-2">🔒</span>
+  </div>
+  <div class="cell-title">THE COMPASS CELL</div>
+  <div class="cell-lang">Guugu Yimithirr — Aboriginal Australian — ~100 speakers</div>
+  <div class="cell-missing">⚠ MISSING: Left, right, in front of, behind — ALL egocentric spatial terms</div>
+  <div class="cell-constraint"><strong>THE CONSTRAINT:</strong> You must use cardinal directions for EVERYTHING. The table isn't "to your left." It's "to the North." And it stays North no matter which way you turn.</div>
+
+  <div class="puzzle" id="puzzle-2">
+    <div class="puzzle-title">▸ Escape this cell</div>
+    <div class="puzzle-instructions">You're in a room. Objects are at fixed compass positions. Answer where each object is — using only cardinal directions. Then we'll spin you around.</div>
+    <div id="compass-room"></div>
+    <div class="facing-indicator" id="facing-text">You are facing: <strong>NORTH ↑</strong></div>
+    <div id="compass-questions"></div>
+    <button class="btn" id="submit-2" onclick="checkCell2()">Submit answers</button>
+    <div class="score-display" id="score-2" style="display:none"></div>
+  </div>
+
+  <div class="reveal" id="reveal-2">
+    <div class="mind-fuck">
+      <h4>⚡ THE MIND-FUCK</h4>
+      <p>The descriptions <strong>don't change when you turn</strong>. In English, "the table is to my left" flips when you spin around. In Guugu Yimithirr, the table is "to the North" <em>forever</em> — regardless of where you face. Their brains maintain a perfect internal compass at all times.</p>
+    </div>
+    <div class="key-facts">
+      <h4>Key Facts</h4>
+      <ul>
+        <li>Speakers maintain a perfect internal compass AT ALL TIMES — even in pitch dark, in unfamiliar buildings, even while dreaming</li>
+        <li>Describing a movie: "The man ran North" — based on the actual compass direction of the screen in the theater</li>
+        <li>When woken from sleep, they can point North instantly</li>
+        <li>Their dead reckoning ability is superhuman by Western standards</li>
+        <li>The word for "hello" is essentially "Which way are you going?" — and you must answer with a cardinal direction</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CELL 3: AYMARA ═══════════ -->
+<section class="cell" id="cell-3" data-cell="3">
+  <div class="cell-header">
+    <span class="cell-number">Cell 03 of 07</span>
+    <span class="cell-lock locked" id="lock-3">🔒</span>
+  </div>
+  <div class="cell-title">THE BACKWARDS CELL</div>
+  <div class="cell-lang">Aymara — Bolivia/Peru — ~2.8 million speakers</div>
+  <div class="cell-missing">⚠ MISSING: The future-is-forward metaphor that nearly ALL other humans use</div>
+  <div class="cell-constraint"><strong>THE CONSTRAINT:</strong> The future is BEHIND you (unseen). The past is IN FRONT of you (visible, known). You walk backwards into tomorrow.</div>
+
+  <div class="puzzle" id="puzzle-3">
+    <div class="puzzle-title">▸ Escape this cell</div>
+    <div class="puzzle-instructions">Place each event in its correct spatial position using Aymara logic. Remember: the past is what you can SEE (in front). The future is what you CAN'T see (behind).</div>
+    <div class="timeline-drop" id="timeline-zones">
+      <div class="drop-zone" data-zone="front" onclick="placeEvent(this)">
+        <div class="zone-label">IN FRONT ← Past<br>(visible, known)</div>
+      </div>
+      <div class="drop-zone" data-zone="here" onclick="placeEvent(this)">
+        <div class="zone-label">RIGHT HERE<br>(present)</div>
+      </div>
+      <div class="drop-zone" data-zone="behind" onclick="placeEvent(this)">
+        <div class="zone-label">BEHIND → Future<br>(unseen, unknown)</div>
+      </div>
+    </div>
+    <div class="event-tray" id="event-tray-3"></div>
+    <button class="btn" id="submit-3" onclick="checkCell3()">Submit</button>
+    <div class="score-display" id="score-3" style="display:none"></div>
+  </div>
+
+  <div class="reveal" id="reveal-3">
+    <div class="mind-fuck">
+      <h4>⚡ THE MIND-FUCK</h4>
+      <p>"I'm walking backwards into my own future. Everything I'll ever do is sneaking up behind me."</p>
+      <p style="margin-top:10px">Think about it: You can <strong>see</strong> the past — it happened, it's known, it's there. You <strong>cannot see</strong> the future. Why would the unseen be in front of you? The Aymara logic is arguably <em>more</em> rational than ours.</p>
+    </div>
+    <div class="key-facts">
+      <h4>Key Facts</h4>
+      <ul>
+        <li>The word for "future" (qhipa) literally means "behind/back"</li>
+        <li>The word for "past" (nayra) literally means "eye/front/sight"</li>
+        <li>When gesturing about the past, Aymara speakers point FORWARD and AWAY from their body</li>
+        <li>When gesturing about the future, they point OVER THEIR SHOULDER or BEHIND them</li>
+        <li>Younger bilingual speakers are LOSING this — Spanish is overwriting their temporal cognition in real time</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CELL 4: YUPNO ═══════════ -->
+<section class="cell" id="cell-4" data-cell="4">
+  <div class="cell-header">
+    <span class="cell-number">Cell 04 of 07</span>
+    <span class="cell-lock locked" id="lock-4">🔒</span>
+  </div>
+  <div class="cell-title">THE UPHILL CELL</div>
+  <div class="cell-lang">Yupno — Papua New Guinea — ~5,000 speakers</div>
+  <div class="cell-missing">⚠ MISSING: Linear time, left-right time flow</div>
+  <div class="cell-constraint"><strong>THE CONSTRAINT:</strong> Time flows UPHILL. The past is downriver at the valley floor. The future is at the mountaintop where the river begins. If the river bends, time bends.</div>
+
+  <div class="puzzle" id="puzzle-4">
+    <div class="puzzle-title">▸ Escape this cell</div>
+    <div class="puzzle-instructions">Place each event on the mountain landscape. Past goes downriver (low), future goes toward the source (high).</div>
+    <svg class="mountain-svg" viewBox="0 0 500 280" id="mountain-svg">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0a18"/><stop offset="100%" stop-color="#08080f"/></linearGradient>
+        <linearGradient id="mtnGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a1a2e"/><stop offset="100%" stop-color="#0c0c16"/></linearGradient>
+      </defs>
+      <rect width="500" height="280" fill="url(#skyGrad)"/>
+      <polygon points="0,280 60,220 130,180 200,120 280,80 340,50 400,30 440,20 500,25 500,280" fill="url(#mtnGrad)" stroke="#2a2a3e" stroke-width="1"/>
+      <path d="M0,260 Q60,240 130,215 Q200,180 280,140 Q340,110 400,85 Q440,70 500,72" fill="none" stroke="#1a4a6a" stroke-width="2" opacity=".5"/>
+      <text x="20" y="250" class="mountain-label" fill="#444460" font-family="JetBrains Mono,monospace" font-size="9">🌊 OCEAN</text>
+      <text x="430" y="16" class="mountain-label" fill="#444460" font-family="JetBrains Mono,monospace" font-size="9">⛰ SOURCE</text>
+      <!-- Drop zones along the mountain -->
+      <g class="mountain-drop-zone" data-mzone="ocean" onclick="placeMountainEvent(this)">
+        <circle cx="50" cy="248" r="18" fill="transparent" stroke="#2a2a3e" stroke-width="1" stroke-dasharray="4"/>
+        <text x="50" y="252" text-anchor="middle" fill="#666680" font-family="JetBrains Mono,monospace" font-size="8" id="mzone-ocean">?</text>
+      </g>
+      <g class="mountain-drop-zone" data-mzone="valley" onclick="placeMountainEvent(this)">
+        <circle cx="165" cy="195" r="18" fill="transparent" stroke="#2a2a3e" stroke-width="1" stroke-dasharray="4"/>
+        <text x="165" y="199" text-anchor="middle" fill="#666680" font-family="JetBrains Mono,monospace" font-size="8" id="mzone-valley">?</text>
+      </g>
+      <g class="mountain-drop-zone" data-mzone="mid" onclick="placeMountainEvent(this)">
+        <circle cx="290" cy="118" r="18" fill="transparent" stroke="#2a2a3e" stroke-width="1" stroke-dasharray="4"/>
+        <text x="290" y="122" text-anchor="middle" fill="#666680" font-family="JetBrains Mono,monospace" font-size="8" id="mzone-mid">?</text>
+      </g>
+      <g class="mountain-drop-zone" data-mzone="summit" onclick="placeMountainEvent(this)">
+        <circle cx="445" cy="40" r="18" fill="transparent" stroke="#2a2a3e" stroke-width="1" stroke-dasharray="4"/>
+        <text x="445" y="44" text-anchor="middle" fill="#666680" font-family="JetBrains Mono,monospace" font-size="8" id="mzone-summit">?</text>
+      </g>
+    </svg>
+    <div class="event-tray" id="event-tray-4"></div>
+    <button class="btn" id="submit-4" onclick="checkCell4()">Submit</button>
+    <div class="score-display" id="score-4" style="display:none"></div>
+  </div>
+
+  <div class="reveal" id="reveal-4">
+    <div class="mind-fuck">
+      <h4>⚡ THE MIND-FUCK</h4>
+      <p>Time isn't a line for the Yupno. It follows the <strong>river's actual topology</strong>. If the river bends, time bends. If you enter a side valley, there's a "time pocket." This is the <strong>only known human culture</strong> where time is non-linear AND topographic.</p>
+    </div>
+    <div class="key-facts">
+      <h4>Key Facts</h4>
+      <ul>
+        <li>Researchers filmed Yupno speakers gesturing about time — they ALWAYS gesture toward the river's source for future, toward the mouth for past</li>
+        <li>Even inside a building with no view of the landscape, they maintain orientation</li>
+        <li>If you describe events while facing uphill vs. downhill, your gestures flip — unlike Western speakers whose gestures are body-relative</li>
+        <li>Time is grounded in LANDSCAPE, not in the body</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CELL 5: TURKISH EVIDENTIALS ═══════════ -->
+<section class="cell" id="cell-5" data-cell="5">
+  <div class="cell-header">
+    <span class="cell-number">Cell 05 of 07</span>
+    <span class="cell-lock locked" id="lock-5">🔒</span>
+  </div>
+  <div class="cell-title">THE EVIDENCE CELL</div>
+  <div class="cell-lang">Turkish — with notes on Pirahã & Kawésqar</div>
+  <div class="cell-missing">⚠ MISSING: The ability to state things without revealing how you know them</div>
+  <div class="cell-constraint"><strong>THE CONSTRAINT:</strong> EVERY verb must be marked for evidence type. Did you SEE it, HEAR about it, or INFER it? You cannot hide your sources.</div>
+
+  <div class="puzzle" id="puzzle-5">
+    <div class="puzzle-title">▸ Escape this cell</div>
+    <div class="puzzle-instructions">For each sentence, choose the correct Turkish evidential suffix based on the context given.<br><strong>-DI</strong> = Direct witness (you were there)<br><strong>-mIş</strong> = Hearsay or inference (told/deduced)</div>
+    <div id="evidential-quiz"></div>
+    <button class="btn" id="submit-5" onclick="checkCell5()">Submit</button>
+    <div class="score-display" id="score-5" style="display:none"></div>
+  </div>
+
+  <div class="reveal" id="reveal-5">
+    <div class="mind-fuck">
+      <h4>⚡ THE MIND-FUCK</h4>
+      <p>English speakers lie effortlessly because they <strong>never have to reveal their evidence</strong>. "It rained" — did you see it? Hear about it? Guess from wet pavement? English doesn't care. Turkish makes lying <em>grammatically visible</em> — using the wrong evidential is like a verbal tell in poker.</p>
+    </div>
+    <div class="key-facts">
+      <h4>Key Facts</h4>
+      <ul>
+        <li>Turkish has a mandatory two-way evidential split on every past-tense verb</li>
+        <li>Pirahã goes further: THREE required evidentials (hearsay, observation, deduction)</li>
+        <li>In Turkish courtrooms, evidential marking is legally significant</li>
+        <li>Children acquire evidentials by age 2-3 — shows it's deeply wired, not learned</li>
+        <li>Turkish speakers are measurably better at tracking information sources than English speakers</li>
+        <li>Kawésqar (Chile) has a SIX-way tense system including "mythological past" as distinct from "distant past"</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CELL 6: TOKI PONA ═══════════ -->
+<section class="cell" id="cell-6" data-cell="6">
+  <div class="cell-header">
+    <span class="cell-number">Cell 06 of 07</span>
+    <span class="cell-lock locked" id="lock-6">🔒</span>
+  </div>
+  <div class="cell-title">THE COMPRESSION CELL</div>
+  <div class="cell-lang">Toki Pona — constructed — ~4,000 speakers</div>
+  <div class="cell-missing">⚠ MISSING: Everything. Only 120–137 words exist in the entire language.</div>
+  <div class="cell-constraint"><strong>THE CONSTRAINT:</strong> Express complex thoughts using radical semantic compression. English has ~170,000 words. You get 120.</div>
+
+  <div class="puzzle" id="puzzle-6">
+    <div class="puzzle-title">▸ Escape this cell</div>
+    <div class="puzzle-instructions">Two phases. First: match English concepts to their Toki Pona logic. Then: decode Toki Pona back into English.</div>
+    <div id="toki-quiz"></div>
+    <button class="btn" id="submit-6" onclick="checkCell6()">Submit all</button>
+    <div class="score-display" id="score-6" style="display:none"></div>
+  </div>
+
+  <div class="reveal" id="reveal-6">
+    <div class="mind-fuck">
+      <h4>⚡ THE MIND-FUCK</h4>
+      <p>The ambiguity <strong>IS</strong> the point. "soweli suli" (big animal) could be a cow, horse, or elephant — and Toki Pona doesn't care which. "I'm depressed" becomes "mi pilin ike" (I feel bad). Most human language is <em>performative complexity hiding simple truths</em>.</p>
+    </div>
+    <div class="key-facts">
+      <h4>Key Facts</h4>
+      <ul>
+        <li>Created by Sonja Lang in 2001 as a thought experiment in minimalism</li>
+        <li>"toki pona" means "good language" or "simple language"</li>
+        <li>Speakers report it changes how they think — forces you to find the essence of what you mean</li>
+        <li>Paradox: the fewer words you have, the more creative you must be</li>
+        <li>A working Toki Pona Wikipedia exists with 6,000+ articles</li>
+        <li>Some people journal in Toki Pona as a form of mindfulness/meditation</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CELL 7: ITHKUIL ═══════════ -->
+<section class="cell" id="cell-7" data-cell="7">
+  <div class="cell-header">
+    <span class="cell-number">Cell 07 of 07</span>
+    <span class="cell-lock locked" id="lock-7">🔒</span>
+  </div>
+  <div class="cell-title">THE OVERLOAD CELL</div>
+  <div class="cell-lang">Ithkuil — constructed by John Quijada — 0 fluent speakers</div>
+  <div class="cell-missing">⚠ MISSING: Nothing. EVERYTHING is expressed with alien precision.</div>
+  <div class="cell-constraint"><strong>THE CONSTRAINT:</strong> Maximum cognitive density. A single word encodes what takes English a full paragraph. Your working memory is about to fail.</div>
+
+  <div class="puzzle" id="puzzle-7">
+    <div class="puzzle-title">▸ Escape this cell</div>
+    <div class="puzzle-instructions">First, witness what Ithkuil can do. Then try building your own super-word.</div>
+
+    <div class="ithkuil-demo">
+      <div style="font-size:.78rem;color:var(--text-dim);margin-bottom:8px;text-align:center">ENGLISH → ITHKUIL</div>
+      <div style="font-size:.82rem;color:var(--text);text-align:center;line-height:1.7;margin-bottom:12px">"On the contrary, I think it may turn out that this rugged mountain range trails off at some point."</div>
+      <div style="font-size:.65rem;color:var(--text-dim);text-align:center;margin-bottom:4px">↓ ONE WORD ↓</div>
+      <div class="ithkuil-word">tram-mļöi-dhâsmařpţuktôx</div>
+      <div class="ithkuil-meaning">Root + 3,600 possible morphological suffixes encoding configuration, perspective, extension, essence, context, designation…</div>
+    </div>
+
+    <div style="font-size:.85rem;color:var(--text);margin:20px 0 12px">Now build your own. Each choice adds a layer of meaning that English can't express:</div>
+    <div id="word-builder"></div>
+    <div class="built-word" id="built-result" style="display:none">
+      <div class="word" id="built-word-text"></div>
+      <div class="meaning" id="built-meaning-text"></div>
+    </div>
+    <button class="btn" id="submit-7" onclick="checkCell7()">Encode word</button>
+    <div class="score-display" id="score-7" style="display:none"></div>
+  </div>
+
+  <div class="reveal" id="reveal-7">
+    <div class="mind-fuck">
+      <h4>⚡ THE MIND-FUCK</h4>
+      <p><strong>Nobody can fluently speak Ithkuil.</strong> It exceeds human working memory. It was designed to show the theoretical MAXIMUM of linguistic encoding — what a language would look like if it wasted no bits. It's the <em>zip file</em> of human expression. And it proves that our languages are lossy <strong>for good reason</strong>.</p>
+    </div>
+    <div class="key-facts">
+      <h4>Key Facts</h4>
+      <ul>
+        <li>3,600+ possible morphological combinations per word</li>
+        <li>Designed from 1978–2004 — 26 years of work by one man</li>
+        <li>A complete hand-designed script exists, not adapted from any natural writing system</li>
+        <li>Academic linguists call it "the most complex language ever constructed"</li>
+        <li>Russian speakers created "Ithkuil music" — songs where each word contains an entire philosophical statement</li>
+        <li>Some speculate an AI could be the first fluent Ithkuil speaker</li>
+        <li>Inspired by Sapir-Whorf: what if a language could encode EVERYTHING possible to think?</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ THE EXIT ═══════════ -->
+<section class="exit-section" id="exit-section">
+  <div class="container">
+    <div class="exit-line" data-delay="0">You escaped 7 cells.</div>
+    <div class="exit-line" data-delay="600">But you're still in one.</div>
+    <div class="exit-line" data-delay="1400" style="margin-top:40px">English has no evidentials. It doesn't mark whether you saw something or just heard about it.</div>
+    <div class="exit-line" data-delay="2200">It forces time into a line. It puts the future ahead of you even though you can't see it.</div>
+    <div class="exit-line" data-delay="3000">It separates colors into categories that are arbitrary.</div>
+    <div class="exit-line" data-delay="4000" class="emphasis" style="margin-top:40px">You didn't enter the Linguistic Prison when you opened this page.</div>
+    <div class="exit-line emphasis" data-delay="5000">You've been in one your whole life.</div>
+    <div class="exit-line final" data-delay="6200">Welcome back.</div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <p class="credit">Night Shift #3 — built by peepee</p>
+  <p>"Filed from the void between 11 PM and dawn"</p>
+  <div class="sources">
+    <h5>Sources</h5>
+    <ul>
+      <li>Everett, D. L. (2005). "Cultural Constraints on Grammar and Cognition in Pirahã." <em>Current Anthropology</em>, 46(4).</li>
+      <li>Haviland, J. B. (1998). "Guugu Yimithirr Cardinal Directions." <em>Ethos</em>, 26(1).</li>
+      <li>Núñez, R. & Sweetser, E. (2006). "With the Future Behind Them: Aymara Language and Gesture." <em>Cognitive Science</em>, 30(3).</li>
+      <li>Núñez, R. et al. (2012). "Contours of Time: Topographic Construals of Past, Present, and Future in the Yupno Valley." <em>Cognition</em>, 124(1).</li>
+      <li>Aksu-Koç, A. (1988). <em>The Acquisition of Aspect and Modality: The Case of Past Reference in Turkish.</em> Cambridge UP.</li>
+      <li>Lang, S. (2014). <em>Toki Pona: The Language of Good.</em></li>
+      <li>Quijada, J. (2004). <em>Ithkuil: A Philosophical Design for a Hypothetical Language.</em></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const STATE = {
+  escaped: new Set(JSON.parse(localStorage.getItem('lp-escaped') || '[]')),
+  save() {
+    localStorage.setItem('lp-escaped', JSON.stringify([...this.escaped]));
+    updateProgress();
+  }
+};
+
+function escapeCell(n) {
+  STATE.escaped.add(n);
+  STATE.save();
+  const lock = document.getElementById('lock-' + n);
+  lock.textContent = '🔓';
+  lock.className = 'cell-lock unlocked';
+  document.getElementById('reveal-' + n).classList.add('shown');
+  checkAllEscaped();
+}
+
+function updateProgress() {
+  const count = STATE.escaped.size;
+  document.getElementById('progress-fill').style.width = (count / 7 * 100) + '%';
+  document.getElementById('counter-num').textContent = count;
+  document.getElementById('hero-count').textContent = count;
+}
+
+function checkAllEscaped() {
+  if (STATE.escaped.size === 7) {
+    const exit = document.getElementById('exit-section');
+    exit.classList.remove('hidden');
+    setTimeout(() => {
+      exit.querySelectorAll('.exit-line').forEach(line => {
+        const delay = parseInt(line.dataset.delay || 0);
+        setTimeout(() => line.classList.add('visible'), delay);
+      });
+    }, 500);
+  }
+}
+
+// ═══════════════════════════════════════════
+// INTERSECTION OBSERVER (scroll reveal)
+// ═══════════════════════════════════════════
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.cell').forEach(c => observer.observe(c));
+
+// ═══════════════════════════════════════════
+// CELL 1: PIRAHÃ
+// ═══════════════════════════════════════════
+const cell1Data = [
+  { text: '"I caught two fish"', ok: false, why: 'no numbers' },
+  { text: '"The fish is big"', ok: true, why: 'direct observation, simple' },
+  { text: '"My grandfather\'s grandfather built this village"', ok: false, why: 'no one alive witnessed it' },
+  { text: '"The man who is tall is my brother"', ok: false, why: 'recursion — relative clause' },
+  { text: '"I heard the sound of a big animal"', ok: true, why: 'direct experience, no recursion' },
+  { text: '"There are more fish in this river than that river"', ok: true, why: 'relative quantity is ok' },
+  { text: '"If we build a boat tomorrow, we can go fishing the day after"', ok: false, why: 'multi-clause planning beyond immediate' },
+];
+const cell1Sel = new Set();
+
+(function initCell1() {
+  const container = document.getElementById('stmts-1');
+  cell1Data.forEach((d, i) => {
+    const div = document.createElement('div');
+    div.className = 'stmt';
+    div.dataset.idx = i;
+    div.innerHTML = `<span class="indicator"></span><span>${d.text}</span>`;
+    div.onclick = () => {
+      if (STATE.escaped.has(1)) return;
+      if (cell1Sel.has(i)) { cell1Sel.delete(i); div.classList.remove('selected'); }
+      else { cell1Sel.add(i); div.classList.add('selected'); }
+    };
+    container.appendChild(div);
+  });
+})();
+
+function checkCell1() {
+  if (STATE.escaped.has(1)) return;
+  let correct = 0;
+  const stmts = document.querySelectorAll('#stmts-1 .stmt');
+  stmts.forEach((el, i) => {
+    const d = cell1Data[i];
+    const selected = cell1Sel.has(i);
+    el.onclick = null;
+    if (selected === d.ok) { correct++; el.classList.add('correct-answer'); }
+    else { el.classList.add('wrong-answer'); }
+    const tag = document.createElement('span');
+    tag.style.cssText = 'margin-left:auto;font-size:.7rem;color:' + (d.ok ? 'var(--green)' : 'var(--red)');
+    tag.textContent = d.ok ? '✓ Can say — ' + d.why : '✗ Cannot — ' + d.why;
+    el.appendChild(tag);
+  });
+  const score = document.getElementById('score-1');
+  score.style.display = 'block';
+  score.innerHTML = `<span class="score-num">${correct}/${cell1Data.length}</span> correct`;
+  document.getElementById('submit-1').disabled = true;
+  if (correct >= 5) escapeCell(1);
+  else { score.innerHTML += '<br><span style="font-size:.78rem;color:var(--amber)">Need 5+ to escape. Refresh to retry.</span>'; }
+}
+
+// ═══════════════════════════════════════════
+// CELL 2: GUUGU YIMITHIRR (Compass)
+// ═══════════════════════════════════════════
+const roomObjects = [
+  { name: 'Table', emoji: '🪑', gRow: 1, gCol: 3, compass: 'N' },
+  { name: 'Door', emoji: '🚪', gRow: 3, gCol: 5, compass: 'E' },
+  { name: 'Window', emoji: '🪟', gRow: 3, gCol: 1, compass: 'W' },
+  { name: 'Bed', emoji: '🛏️', gRow: 5, gCol: 3, compass: 'S' },
+];
+let facingDir = 'N';
+const compassAnswers = {};
+const facingCycle = ['N','E','S','W'];
+let compassPhase = 0; // 0 = first round, 1 = rotated round
+
+(function initCell2() {
+  const room = document.createElement('div');
+  room.className = 'room-grid';
+  room.innerHTML = `<span class="compass-label compass-n">NORTH</span><span class="compass-label compass-s">SOUTH</span><span class="compass-label compass-e">EAST</span><span class="compass-label compass-w">WEST</span>`;
+  for (let r = 1; r <= 5; r++) {
+    for (let c = 1; c <= 5; c++) {
+      const cell = document.createElement('div');
+      cell.style.gridRow = r;
+      cell.style.gridColumn = c;
+      if (r === 3 && c === 3) { cell.className = 'room-obj'; cell.innerHTML = '👤<span class="obj-label">YOU</span>'; }
+      const obj = roomObjects.find(o => o.gRow === r && o.gCol === c);
+      if (obj) { cell.className = 'room-obj'; cell.innerHTML = `${obj.emoji}<span class="obj-label">${obj.name}</span>`; }
+      room.appendChild(cell);
+    }
+  }
+  document.getElementById('compass-room').appendChild(room);
+  renderCompassQuestions();
+})();
+
+function renderCompassQuestions() {
+  const qc = document.getElementById('compass-questions');
+  qc.innerHTML = '';
+  roomObjects.forEach((obj, i) => {
+    const div = document.createElement('div');
+    div.className = 'compass-question';
+    div.innerHTML = `Where is the <span class="q-obj">${obj.emoji} ${obj.name}</span>?
+      <div class="direction-btns" data-qi="${i}">
+        ${['North','South','East','West'].map(d => `<div class="dir-btn" data-dir="${d[0]}" onclick="selectDir(this,${i})">${d}</div>`).join('')}
+      </div>`;
+    qc.appendChild(div);
+  });
+}
+
+function selectDir(el, qi) {
+  if (STATE.escaped.has(2)) return;
+  el.parentElement.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  compassAnswers[qi] = el.dataset.dir;
+}
+
+function checkCell2() {
+  if (STATE.escaped.has(2)) return;
+  let correct = 0;
+  roomObjects.forEach((obj, i) => {
+    const btns = document.querySelectorAll(`[data-qi="${i}"] .dir-btn`);
+    btns.forEach(b => {
+      b.onclick = null;
+      if (b.dataset.dir === obj.compass) b.classList.add('correct');
+      if (b.classList.contains('selected') && b.dataset.dir !== obj.compass) b.classList.add('incorrect');
+    });
+    if (compassAnswers[i] === obj.compass) correct++;
+  });
+  const score = document.getElementById('score-2');
+  score.style.display = 'block';
+
+  if (compassPhase === 0) {
+    score.innerHTML = `Round 1: <span class="score-num">${correct}/4</span>`;
+    if (correct >= 3) {
+      compassPhase = 1;
+      score.innerHTML += '<br><span style="color:var(--amber);font-size:.78rem">Now you\'ve been SPUN AROUND. You face SOUTH. Where is everything now?</span>';
+      document.getElementById('facing-text').innerHTML = 'You are facing: <strong>SOUTH ↓</strong>';
+      Object.keys(compassAnswers).forEach(k => delete compassAnswers[k]);
+      renderCompassQuestions();
+      document.getElementById('submit-2').disabled = false;
+      // The key twist: correct answers are STILL the same compass directions
+    } else {
+      score.innerHTML += '<br><span style="font-size:.78rem;color:var(--amber)">Need 3+ to proceed. Refresh to retry.</span>';
+      document.getElementById('submit-2').disabled = true;
+    }
+  } else {
+    score.innerHTML = `Round 2 (facing South): <span class="score-num">${correct}/4</span>`;
+    if (correct >= 3) {
+      score.innerHTML += '<br><span style="font-size:.78rem;color:var(--green)">You got it! The answers DON\'T CHANGE. The table is ALWAYS North — no matter where you face.</span>';
+      escapeCell(2);
+    } else {
+      score.innerHTML += '<br><span style="font-size:.78rem;color:var(--amber)">The trick: the answers are IDENTICAL. Compass directions don\'t change when you turn. That\'s the whole point.</span>';
+      escapeCell(2); // Escape anyway — the lesson IS the failure
+    }
+    document.getElementById('submit-2').disabled = true;
+  }
+}
+
+// ═══════════════════════════════════════════
+// CELL 3: AYMARA (Backwards Time)
+// ═══════════════════════════════════════════
+const aymaraEvents = [
+  { text: 'Your grandmother\'s wedding', zone: 'front', emoji: '💒' },
+  { text: 'What you\'ll eat tomorrow', zone: 'behind', emoji: '🍽️' },
+  { text: 'What\'s happening right now', zone: 'here', emoji: '⏳' },
+  { text: 'Your first memory', zone: 'front', emoji: '👶' },
+  { text: 'Your death', zone: 'behind', emoji: '💀' },
+  { text: 'This exact moment', zone: 'here', emoji: '📍' },
+];
+let selectedEvent3 = null;
+const eventPlacements3 = {};
+
+(function initCell3() {
+  const tray = document.getElementById('event-tray-3');
+  aymaraEvents.forEach((ev, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'event-chip';
+    chip.textContent = ev.emoji + ' ' + ev.text;
+    chip.dataset.idx = i;
+    chip.onclick = () => selectEvent3(chip, i);
+    tray.appendChild(chip);
+  });
+})();
+
+function selectEvent3(chip, idx) {
+  if (STATE.escaped.has(3)) return;
+  document.querySelectorAll('#event-tray-3 .event-chip').forEach(c => c.style.outline = '');
+  chip.style.outline = '2px solid var(--amber)';
+  selectedEvent3 = idx;
+}
+
+function placeEvent(zoneEl) {
+  if (selectedEvent3 === null || STATE.escaped.has(3)) return;
+  const zone = zoneEl.dataset.zone;
+  // Remove from previous zone if any
+  Object.keys(eventPlacements3).forEach(k => { if (parseInt(k) === selectedEvent3) delete eventPlacements3[k]; });
+  // Remove existing chip display in zones
+  document.querySelectorAll('.drop-zone .event-chip.in-zone').forEach(c => {
+    if (parseInt(c.dataset.idx) === selectedEvent3) c.remove();
+  });
+  eventPlacements3[selectedEvent3] = zone;
+  const chip = document.createElement('div');
+  chip.className = 'event-chip in-zone';
+  chip.dataset.idx = selectedEvent3;
+  chip.textContent = aymaraEvents[selectedEvent3].emoji + ' ' + aymaraEvents[selectedEvent3].text;
+  chip.onclick = () => { delete eventPlacements3[selectedEvent3]; chip.remove(); document.querySelector(`#event-tray-3 .event-chip[data-idx="${selectedEvent3}"]`).classList.remove('placed'); };
+  zoneEl.appendChild(chip);
+  document.querySelector(`#event-tray-3 .event-chip[data-idx="${selectedEvent3}"]`).classList.add('placed');
+  selectedEvent3 = null;
+  document.querySelectorAll('#event-tray-3 .event-chip').forEach(c => c.style.outline = '');
+}
+
+function checkCell3() {
+  if (STATE.escaped.has(3)) return;
+  let correct = 0;
+  aymaraEvents.forEach((ev, i) => {
+    const placed = eventPlacements3[i];
+    if (placed === ev.zone) correct++;
+    // Mark in-zone chips
+    document.querySelectorAll(`.drop-zone .event-chip.in-zone[data-idx="${i}"]`).forEach(c => {
+      c.classList.add(placed === ev.zone ? 'correct-place' : 'wrong-place');
+    });
+  });
+  const score = document.getElementById('score-3');
+  score.style.display = 'block';
+  score.innerHTML = `<span class="score-num">${correct}/${aymaraEvents.length}</span> correct`;
+  if (correct >= 4) escapeCell(3);
+  else score.innerHTML += '<br><span style="font-size:.78rem;color:var(--amber)">Need 4+ correct. Remember: past = FRONT (seen), future = BEHIND (unseen).</span>';
+  document.getElementById('submit-3').disabled = true;
+}
+
+// ═══════════════════════════════════════════
+// CELL 4: YUPNO (Mountain Time)
+// ═══════════════════════════════════════════
+const yupnoEvents = [
+  { text: '🏛️ Ancient history', zone: 'ocean' },
+  { text: '📅 Yesterday', zone: 'valley' },
+  { text: '🔮 Next year', zone: 'mid' },
+  { text: '🌌 The far future', zone: 'summit' },
+];
+let selectedEvent4 = null;
+const eventPlacements4 = {};
+
+(function initCell4() {
+  const tray = document.getElementById('event-tray-4');
+  yupnoEvents.forEach((ev, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'event-chip';
+    chip.textContent = ev.text;
+    chip.dataset.idx = i;
+    chip.onclick = () => {
+      if (STATE.escaped.has(4)) return;
+      document.querySelectorAll('#event-tray-4 .event-chip').forEach(c => c.style.outline = '');
+      chip.style.outline = '2px solid var(--amber)';
+      selectedEvent4 = i;
+    };
+    tray.appendChild(chip);
+  });
+})();
+
+function placeMountainEvent(zoneEl) {
+  if (selectedEvent4 === null || STATE.escaped.has(4)) return;
+  const zone = zoneEl.dataset.mzone;
+  // Clear previous placement of this event
+  Object.keys(eventPlacements4).forEach(k => {
+    if (parseInt(k) === selectedEvent4) {
+      const prevZone = eventPlacements4[k];
+      document.getElementById('mzone-' + prevZone).textContent = '?';
+      delete eventPlacements4[k];
+    }
+  });
+  // Also clear this zone if another event was here
+  Object.keys(eventPlacements4).forEach(k => {
+    if (eventPlacements4[k] === zone) {
+      document.querySelector(`#event-tray-4 .event-chip[data-idx="${k}"]`).classList.remove('placed');
+      delete eventPlacements4[k];
+    }
+  });
+  eventPlacements4[selectedEvent4] = zone;
+  const label = document.getElementById('mzone-' + zone);
+  label.textContent = yupnoEvents[selectedEvent4].text.replace(/^[^\s]+\s/, '');
+  label.style.fill = '#FFB300';
+  label.style.fontSize = '7px';
+  document.querySelector(`#event-tray-4 .event-chip[data-idx="${selectedEvent4}"]`).classList.add('placed');
+  selectedEvent4 = null;
+  document.querySelectorAll('#event-tray-4 .event-chip').forEach(c => c.style.outline = '');
+}
+
+function checkCell4() {
+  if (STATE.escaped.has(4)) return;
+  let correct = 0;
+  yupnoEvents.forEach((ev, i) => {
+    if (eventPlacements4[i] === ev.zone) {
+      correct++;
+      document.getElementById('mzone-' + ev.zone).style.fill = '#39FF14';
+    } else if (eventPlacements4[i]) {
+      document.getElementById('mzone-' + eventPlacements4[i]).style.fill = '#ff3333';
+    }
+  });
+  const score = document.getElementById('score-4');
+  score.style.display = 'block';
+  score.innerHTML = `<span class="score-num">${correct}/${yupnoEvents.length}</span> correct`;
+  if (correct >= 3) escapeCell(4);
+  else score.innerHTML += '<br><span style="font-size:.78rem;color:var(--amber)">Need 3+. Past = downhill/ocean. Future = uphill/summit.</span>';
+  document.getElementById('submit-4').disabled = true;
+}
+
+// ═══════════════════════════════════════════
+// CELL 5: TURKISH EVIDENTIALS
+// ═══════════════════════════════════════════
+const evData = [
+  { text: '"It rained last night"', context: 'You see wet ground but slept through it', answer: 'mis', why: 'inference from evidence' },
+  { text: '"It rained last night"', context: 'You stood in the rain', answer: 'di', why: 'direct experience' },
+  { text: '"She got married"', context: 'She told you on the phone', answer: 'mis', why: 'hearsay' },
+  { text: '"She got married"', context: 'You were at the wedding', answer: 'di', why: 'direct witness' },
+  { text: '"The cat ate the fish"', context: 'You found the empty bowl and the cat licking its lips', answer: 'mis', why: 'inference' },
+  { text: '"The cat ate the fish"', context: 'You watched the cat grab it and eat it', answer: 'di', why: 'direct observation' },
+];
+const evAnswers = {};
+
+(function initCell5() {
+  const container = document.getElementById('evidential-quiz');
+  evData.forEach((d, i) => {
+    const div = document.createElement('div');
+    div.className = 'ev-sentence';
+    div.innerHTML = `<div class="ev-text">${d.text}</div><div class="ev-context">${d.context}</div>
+      <div class="ev-options">
+        <div class="ev-opt" data-val="di" onclick="selectEv(this,${i})">-DI<br><span style="font-size:.65rem;opacity:.6">direct witness</span></div>
+        <div class="ev-opt" data-val="mis" onclick="selectEv(this,${i})">-mIş<br><span style="font-size:.65rem;opacity:.6">hearsay / inference</span></div>
+      </div>`;
+    container.appendChild(div);
+  });
+})();
+
+function selectEv(el, qi) {
+  if (STATE.escaped.has(5)) return;
+  el.parentElement.querySelectorAll('.ev-opt').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  evAnswers[qi] = el.dataset.val;
+}
+
+function checkCell5() {
+  if (STATE.escaped.has(5)) return;
+  let correct = 0;
+  evData.forEach((d, i) => {
+    const opts = document.querySelectorAll(`#evidential-quiz .ev-sentence:nth-child(${i+1}) .ev-opt`);
+    opts.forEach(o => {
+      o.onclick = null;
+      if (o.dataset.val === d.answer) o.classList.add('correct');
+      if (o.classList.contains('selected') && o.dataset.val !== d.answer) o.classList.add('wrong');
+    });
+    if (evAnswers[i] === d.answer) correct++;
+  });
+  const score = document.getElementById('score-5');
+  score.style.display = 'block';
+  score.innerHTML = `<span class="score-num">${correct}/${evData.length}</span> correct`;
+  if (correct >= 4) escapeCell(5);
+  else score.innerHTML += '<br><span style="font-size:.78rem;color:var(--amber)">Need 4+ to escape. Refresh to retry.</span>';
+  document.getElementById('submit-5').disabled = true;
+}
+
+// ═══════════════════════════════════════════
+// CELL 6: TOKI PONA
+// ═══════════════════════════════════════════
+const tokiRounds = [
+  { type: 'en2tp', prompt: 'What is "Computer" in Toki Pona logic?', options: ['telo nasa','ilo sona','tomo tawa','pilin ike'], answer: 1 },
+  { type: 'en2tp', prompt: 'What is "Hospital"?', options: ['tomo pi pona sijelo','kulupu pi ilo sona','jan pi pona lukin','tomo tawa sewi'], answer: 0 },
+  { type: 'en2tp', prompt: 'What is "Rocket"?', options: ['ilo sona','nasin pi jan ale','tomo tawa sewi','pilin ike'], answer: 2 },
+  { type: 'en2tp', prompt: 'What is "Democracy"?', options: ['pilin ike','tomo tawa','nasin pi jan ale','telo nasa'], answer: 2 },
+  { type: 'tp2en', prompt: 'What does "telo nasa" (crazy water) mean?', options: ['Tears','Alcohol','Rain','Poison'], answer: 1 },
+  { type: 'tp2en', prompt: 'What does "tomo tawa" (movement building) mean?', options: ['Airport','Car / Vehicle','Train station','Elevator'], answer: 1 },
+  { type: 'tp2en', prompt: '"kili loje" (red fruit) could mean...?', options: ['Only tomato','Only apple','Tomato, apple, strawberry — all valid','Cherry only'], answer: 2 },
+  { type: 'tp2en', prompt: '"soweli suli" (big animal) is...?', options: ['Only elephant','Only horse','Any big animal — cow, horse, elephant','Only cow'], answer: 2 },
+];
+const tokiAnswers = {};
+
+(function initCell6() {
+  const container = document.getElementById('toki-quiz');
+  let lastType = '';
+  tokiRounds.forEach((r, i) => {
+    if (r.type !== lastType) {
+      const header = document.createElement('div');
+      header.style.cssText = 'font-size:.75rem;color:var(--green);letter-spacing:.2em;text-transform:uppercase;margin:20px 0 8px';
+      header.textContent = r.type === 'en2tp' ? '▸ Phase 1: English → Toki Pona' : '▸ Phase 2: Toki Pona → English';
+      container.appendChild(header);
+      lastType = r.type;
+    }
+    const div = document.createElement('div');
+    div.className = 'tp-round';
+    div.innerHTML = `<div class="tp-prompt">${r.prompt}</div><div class="tp-options">${r.options.map((o, j) => `<div class="tp-opt" data-ri="${i}" data-oi="${j}" onclick="selectToki(this,${i},${j})">${o}</div>`).join('')}</div>`;
+    container.appendChild(div);
+  });
+})();
+
+function selectToki(el, ri, oi) {
+  if (STATE.escaped.has(6)) return;
+  el.parentElement.querySelectorAll('.tp-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  tokiAnswers[ri] = oi;
+}
+
+function checkCell6() {
+  if (STATE.escaped.has(6)) return;
+  let correct = 0;
+  tokiRounds.forEach((r, i) => {
+    document.querySelectorAll(`.tp-opt[data-ri="${i}"]`).forEach(o => {
+      o.onclick = null;
+      if (parseInt(o.dataset.oi) === r.answer) o.classList.add('correct');
+      if (o.classList.contains('selected') && parseInt(o.dataset.oi) !== r.answer) o.classList.add('wrong');
+    });
+    if (tokiAnswers[i] === r.answer) correct++;
+  });
+  const score = document.getElementById('score-6');
+  score.style.display = 'block';
+  score.innerHTML = `<span class="score-num">${correct}/${tokiRounds.length}</span> correct`;
+  if (correct >= 5) escapeCell(6);
+  else score.innerHTML += '<br><span style="font-size:.78rem;color:var(--amber)">Need 5+ to escape. Refresh to retry.</span>';
+  document.getElementById('submit-6').disabled = true;
+}
+
+// ═══════════════════════════════════════════
+// CELL 7: ITHKUIL WORD BUILDER
+// ═══════════════════════════════════════════
+const builderSteps = [
+  { label: 'Stem (what exists)', options: [
+    { name: 'Action', code: 'thr', desc: 'a doing, a process' },
+    { name: 'Thing', code: 'kh', desc: 'an entity, an object' },
+    { name: 'Quality', code: 'pš', desc: 'a property, a state' },
+  ]},
+  { label: 'Configuration (how many, how arranged)', options: [
+    { name: 'Individual', code: 'a', desc: 'one single instance' },
+    { name: 'Pair', code: 'oi', desc: 'two in natural relation' },
+    { name: 'Group', code: 'ai', desc: 'a coherent cluster' },
+    { name: 'Scattered', code: 'ëu', desc: 'dispersed randomly' },
+  ]},
+  { label: 'Perspective (which angle)', options: [
+    { name: 'The act itself', code: 'l', desc: 'focusing on the doing' },
+    { name: 'The result', code: 'r', desc: 'what it produced' },
+    { name: 'The experience', code: 'ň', desc: 'how it felt' },
+    { name: 'The concept', code: 'ţ', desc: 'the abstract idea of it' },
+  ]},
+  { label: 'Extension (temporal phase)', options: [
+    { name: 'Beginning', code: '-ám', desc: 'the start of it' },
+    { name: 'Middle', code: '-ök', desc: 'in the thick of it' },
+    { name: 'End', code: '-ûp', desc: 'the conclusion' },
+    { name: 'Gradual', code: '-ëç', desc: 'slowly unfolding' },
+  ]},
+];
+const builderChoices = {};
+
+(function initCell7() {
+  const container = document.getElementById('word-builder');
+  builderSteps.forEach((step, si) => {
+    const div = document.createElement('div');
+    div.className = 'builder-step';
+    div.innerHTML = `<label>${step.label}</label><div class="builder-options">${step.options.map((o, oi) => `<div class="build-opt" onclick="selectBuild(this,${si},${oi})" title="${o.desc}">${o.name}</div>`).join('')}</div>`;
+    container.appendChild(div);
+  });
+})();
+
+function selectBuild(el, si, oi) {
+  if (STATE.escaped.has(7)) return;
+  el.parentElement.querySelectorAll('.build-opt').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  builderChoices[si] = oi;
+  updateBuiltWord();
+}
+
+function updateBuiltWord() {
+  if (Object.keys(builderChoices).length < 4) return;
+  const result = document.getElementById('built-result');
+  result.style.display = 'block';
+  let word = '';
+  let meaning = '';
+  builderSteps.forEach((step, si) => {
+    const opt = step.options[builderChoices[si]];
+    word += opt.code;
+    meaning += opt.desc + ' → ';
+  });
+  meaning = meaning.replace(/ → $/, '');
+  document.getElementById('built-word-text').textContent = word;
+  document.getElementById('built-meaning-text').textContent = meaning;
+}
+
+function checkCell7() {
+  if (STATE.escaped.has(7)) return;
+  if (Object.keys(builderChoices).length < 4) {
+    const score = document.getElementById('score-7');
+    score.style.display = 'block';
+    score.innerHTML = '<span style="color:var(--amber)">Select one option from each category to encode your word.</span>';
+    return;
+  }
+  const result = document.getElementById('built-result');
+  result.style.display = 'block';
+  const score = document.getElementById('score-7');
+  score.style.display = 'block';
+
+  let word = '';
+  let meaningParts = [];
+  builderSteps.forEach((step, si) => {
+    const opt = step.options[builderChoices[si]];
+    word += opt.code;
+    meaningParts.push(`<strong>${step.label}:</strong> ${opt.name} (${opt.desc})`);
+  });
+
+  document.getElementById('built-word-text').textContent = word;
+  document.getElementById('built-meaning-text').innerHTML = meaningParts.join('<br>');
+
+  score.innerHTML = `<span style="color:var(--green)">Your word <strong style="color:var(--amber)">${word}</strong> encodes 4 dimensions of meaning in ${word.length} characters.</span><br><span style="font-size:.78rem;color:var(--text-dim)">English would need a full sentence. Ithkuil encodes 3,600× more combinations than this demo.</span>`;
+  document.getElementById('submit-7').disabled = true;
+  escapeCell(7);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+updateProgress();
+
+// Restore escaped cells
+STATE.escaped.forEach(n => {
+  const lock = document.getElementById('lock-' + n);
+  if (lock) { lock.textContent = '🔓'; lock.className = 'cell-lock unlocked'; }
+  const reveal = document.getElementById('reveal-' + n);
+  if (reveal) reveal.classList.add('shown');
+});
+checkAllEscaped();
+
+// Hide exit if not all escaped
+if (STATE.escaped.size < 7) {
+  document.getElementById('exit-section').classList.add('hidden');
+}
+</script>
+</body>
+</html>
